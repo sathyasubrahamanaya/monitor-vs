@@ -1,6 +1,6 @@
 [package]
 name = "monitor_vs"
-version = "0.4.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["sathyasubrahmanya v s <sathyapel005@gmail.com>"]
 [dependencies]

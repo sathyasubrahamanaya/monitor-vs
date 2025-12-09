@@ -20,7 +20,7 @@ use std::hash::{Hasher};
 use once_cell::sync::Lazy;
 
 // --- Configuration ---
-const INACTIVITY_THRESHOLD: Duration = Duration::from_secs(300); // 5 minutes
+const INACTIVITY_THRESHOLD: Duration = Duration::from_secs(300); //configurable
 const KEY_FILE: &str = "session.key";
 const LOG_FILE: &str = "productivity_log.csv";
 const SCREENSHOT_DIR: &str = "screenshots";
@@ -253,7 +253,7 @@ fn run_verification(file_path: &str) {
     }
 }
 
-// --- Optimized Capture Function ---
+
 fn capture_screenshots_optimized() -> String {
     let monitors = Monitor::all().unwrap_or_else(|_| vec![]);
     let timestamp = Local::now().format("%Y%m%d_%H%M%S");
@@ -262,27 +262,31 @@ fn capture_screenshots_optimized() -> String {
     if let Some(monitor) = monitors.first() {
         if let Ok(image) = monitor.capture_image() {
             
-            // 1. Deduplication: Hash the raw bytes
+            // 1. Deduplication (Check if screen changed)
             let mut hasher = DefaultHasher::new();
-            hasher.write(image.as_raw()); // Hash pixel data
+            hasher.write(image.as_raw());
             let new_hash = hasher.finish();
 
-            // Check against previous hash
             let mut last_hash_guard = LAST_HASH.lock().unwrap();
             if *last_hash_guard == new_hash {
                 return String::from("Duplicate (Skipped)");
             }
             *last_hash_guard = new_hash;
 
-            // 2. Resizing: Downscale to 50%
+           
             let new_width = image.width() / 2;
             let new_height = image.height() / 2;
-            let resized_image = image::imageops::resize(&image, new_width, new_height, FilterType::Triangle);
+            let resized_buffer = image::imageops::resize(&image, new_width, new_height, FilterType::Triangle);
 
-            // 3. Compression: Save as JPEG
+
+            let dynamic_image = image::DynamicImage::ImageRgba8(resized_buffer);
+            let rgb_image = dynamic_image.to_rgb8(); 
+
+            // 3. Save as JPEG
             let filename = format!("{}/screen_{}.jpg", SCREENSHOT_DIR, timestamp);
             
-            if resized_image.save(&filename).is_ok() {
+            // Now we save the RGB image, which is valid for JPEGs
+            if rgb_image.save(&filename).is_ok() {
                 saved_filename = filename;
             }
         }

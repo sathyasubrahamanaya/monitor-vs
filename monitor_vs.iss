@@ -1,6 +1,6 @@
 ; --- Configuration ---
 #define MyAppName "Monitor VS"
-#define MyAppVersion "0.4"
+#define MyAppVersion "0.5.1"
 #define MyAppPublisher "SathyaSubrahmanya V S"
 #define MyAppExeName "monitor_vs.exe"
 #define MyAppId "{{A5D3E8C1-4F2B-4A1D-9E8F-7C6B5A4D3E2F}"
