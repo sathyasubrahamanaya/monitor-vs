@@ -1,7 +1,7 @@
 
-# Productivity Monitor
+# Monitor VS
 
-A secure, lightweight tool to track computer activity. It logs active window titles, counts keystrokes/mouse events, and takes smart, deduplicated screenshots. All logs are cryptographically signed to prevent tampering.
+A secure, lightweight rust powered tool to track computer activity. It logs active window titles, counts keystrokes/mouse events, and takes smart, deduplicated screenshots. All logs are cryptographically signed to prevent tampering.
 
 ## 1\. Installation
 
