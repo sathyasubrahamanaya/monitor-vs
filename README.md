@@ -1,84 +1,70 @@
-# User Guide: Productivity Monitor
 
-## 1. Installation
-Because this software was built internally and not purchased from a store, Windows might treat it as "unrecognized." Follow these steps to install it successfully.
+# Productivity Monitor
 
-1.  **Download & Extract:** Download the `ProductivityMonitor_Setup.zip` file and extract it.
-2.  **Run the Installer:** Double-click `ProductivityMonitor_Setup.exe`.
-3.  **Bypass SmartScreen:**
-    * If you see a blue window saying *"Windows protected your PC"*:
-    * Click **More Info**.
-    * Click the **Run Anyway** button.
-4.  **Finish Setup:** Follow the installation prompts. We recommend keeping the "Create Desktop Shortcut" option checked.
+A secure, lightweight tool to track computer activity. It logs active window titles, counts keystrokes/mouse events, and takes smart, deduplicated screenshots. All logs are cryptographically signed to prevent tampering.
 
----
+## 1\. Installation
 
-## 2. How to Start Monitoring
-Once installed, the application is designed to run silently in the background.
+1.  **Download** the latest release (Zip or Installer).
+2.  **Run** `Monitor_VS_Setup_v0.5.1.exe`.
+3.  **SmartScreen Warning:** If Windows says "Protected your PC", click **More Info** → **Run Anyway**.
+4.  Follow the prompts to install to `C:\Program Files\Monitor VS`.
 
-1.  Double-click the **Productivity Monitor** icon on your Desktop.
-2.  **That’s it!** The program is now running.
-    * It does **not** open a visible window (to stay out of your way).
-    * It will automatically log activity and take screenshots based on the default settings (every 60 seconds).
+## 2\. How to Run
 
-**To Stop Monitoring:**
-* Locate the window (if you ran it via command line) and press `Ctrl+C`.
-* OR, use Task Manager to end the `productivity_monitor.exe` process.
+### Basic Mode (Default)
 
----
+Simply double-click the **Productivity Monitor** shortcut on your Desktop.
 
-## 3. How to Verify Log Integrity
-This tool ensures that work logs have not been tampered with. To check if a log file is valid:
+  * **Log Interval:** Every 60 seconds.
+  * **Screenshot Interval:** Every 300 seconds.
+  * **Note:** The app runs silently in the background. To stop it, use Task Manager.
 
-1.  Open the **Start Menu**.
-2.  Go to the **Productivity Monitor** folder.
-3.  Click on **Verify Logs**.
-4.  A black window will appear and scan your data.
+### Advanced Mode (Custom Intervals)
 
-**Understanding the Results:**
-* **✅ LOG INTEGRITY VERIFIED:** The file is authentic. No data has been changed.
-* **❌ INTEGRITY COMPROMISED:** Someone has manually edited the CSV file (changed timestamps, status, etc.). The line number of the fake entry will be shown.
+To change the settings, you must run the application from the Command Line (CMD or PowerShell).
 
----
+1.  Open **Command Prompt** or **PowerShell**.
+2.  Navigate to the installation folder:
+    ```powershell
+    cd "C:\Program Files\Monitor VS"
+    ```
+3.  Run the monitor command with your desired flags:
+    ```powershell
+    .\monitor_vs.exe monitor --log-interval 30 --screenshot-interval 300
+    ```
+    *(This example logs every 30 seconds and takes a screenshot every 5 minutes.)*
+    
+## 3\. Verifying Logs
 
-## 4. Where is my Data?
-By default, all data is stored in the installation folder.
+To ensure `productivity_log.csv` has not been edited manually, use the verify command via the terminal.
 
-**Location:** `C:\Program Files\Productivity Monitor`
+1.  Open **Command Prompt** or **PowerShell**.
+2.  Navigate to the installation folder (if not already there):
+    ```powershell
+    cd "C:\Program Files\Monitor VS"
+    ```
+3.  Run the verification command:
+    ```powershell
+    .\monitor_vs.exe verify
+    ```
+4.  The application will scan the log file and the session key.
 
-You will find:
-* `productivity_log.csv`: The spreadsheet containing timestamps, active apps, and window titles.
-* `screenshots/`: A folder containing the images of your screen.
-* `session.key`: **IMPORTANT** - This is the security key used to sign your logs.
+**Output Meanings:**
 
-> **⚠️ WARNING:** Never delete or lose `session.key`. If this file is lost, you will be unable to verify the integrity of your previous logs.
+  * `✅ LOG INTEGRITY VERIFIED`: The file is authentic.
+  * `❌ INTEGRITY COMPROMISED`: The file has been tampered with. The specific line number of the fake entry will be displayed.
 
----
+## 4\. Output Files
 
-## 5. Advanced Settings (Changing Intervals)
-The default setting is to log and screenshot every **60 seconds**. To change this:
+All data is stored in the installation directory:
 
-1.  Right-click the **Productivity Monitor** shortcut on your Desktop.
-2.  Select **Properties**.
-3.  Find the **Target** box. It will look like this:
-    `"C:\...\productivity_monitor.exe" monitor`
-4.  Add your custom settings to the end.
-    * *Example (Log every 30s, Screenshot every 5 mins):*
-        `...productivity_monitor.exe" monitor --log-interval 30 --screenshot-interval 300`
-5.  Click **Apply** and **OK**.
-6.  Restart the application for changes to take effect.
+  * **`productivity_log.csv`**: The main activity log.
+  * **`screenshots/`**: Folder containing compressed JPEG screenshots.
+  * **`session.key`**: The cryptographic key used for signing logs.
+      * **⚠️ IMPORTANT:** Do not delete `session.key`, or you will lose the ability to verify past logs.
 
----
+## 5\. Troubleshooting
 
-## 6. Troubleshooting
-
-**Q: The app crashes immediately upon opening.**
-* **Fix:** Ensure you are not trying to run it from inside the Zip file. Extract it first.
-* **Fix:** If installed in Program Files, ensure you used the official Installer (which sets the correct write permissions).
-
-**Q: Screenshots are black.**
-* **Fix:** Some secure applications (like banking websites or Netflix) block screenshots. This is normal behavior.
-* **Fix:** If the computer is on the Lock Screen, Windows prevents screenshots for security reasons.
-
-**Q: My Antivirus deleted the file.**
-* **Fix:** Open your Antivirus settings and add an **Exclusion** for `C:\Program Files\Productivity Monitor`. This happens because the tool records keystrokes and screens, which mimics the behavior of surveillance software.
+  * **Antivirus:** If the file is deleted automatically, add an **Exclusion** in Windows Defender for `C:\Program Files\Productivity Monitor`.
+  * **Black Screenshots:** Banking apps, Netflix, and the Windows Lock Screen prevent screen capture for security reasons.
