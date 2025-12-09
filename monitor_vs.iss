@@ -1,7 +1,7 @@
 ; --- Configuration ---
 #define MyAppName "Monitor VS"
-#define MyAppVersion "0.3"
-#define MyAppPublisher "SathyaSubrahmanya"
+#define MyAppVersion "0.4"
+#define MyAppPublisher "SathyaSubrahmanya V S"
 #define MyAppExeName "monitor_vs.exe"
 #define MyAppId "{{A5D3E8C1-4F2B-4A1D-9E8F-7C6B5A4D3E2F}"
 
@@ -23,7 +23,7 @@ PrivilegesRequired=admin
 
 ; Output settings
 OutputDir=.
-OutputBaseFilename=ProductivityMonitor_Setup_v{#MyAppVersion}
+OutputBaseFilename=Monitor_VS_Setup_v{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern

@@ -10,14 +10,23 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
-// NEW IMPORTS
-use xcap::Monitor; 
+
+// --- New Imports for Optimization ---
+use xcap::Monitor;
+use image::imageops::FilterType;
+use std::sync::Mutex;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hasher};
+use once_cell::sync::Lazy;
 
 // --- Configuration ---
 const INACTIVITY_THRESHOLD: Duration = Duration::from_secs(300); // 5 minutes
 const KEY_FILE: &str = "session.key";
 const LOG_FILE: &str = "productivity_log.csv";
 const SCREENSHOT_DIR: &str = "screenshots";
+
+// Global state to store the hash of the last screenshot (for deduplication)
+static LAST_HASH: Lazy<Mutex<u64>> = Lazy::new(|| Mutex::new(0));
 
 // Type alias for HMAC-SHA256
 type HmacSha256 = Hmac<Sha256>;
@@ -39,7 +48,7 @@ enum Commands {
         log_interval: u64,
 
         /// Interval to take screenshots in seconds
-        #[arg(short, long, default_value_t = 60)]
+        #[arg(short, long, default_value_t = 300)]
         screenshot_interval: u64,
     },
     /// Verifies the integrity of the log file against the session key
@@ -67,6 +76,7 @@ fn main() {
 fn run_monitor(log_interval: u64, screenshot_interval: u64) {
     println!("--- Starting Monitor Mode ---");
     println!("Logging every {}s | Screenshots every {}s", log_interval, screenshot_interval);
+    println!("Optimizations: JPEG Compression + 50% Resize + Deduplication Active");
 
     fs::create_dir_all(SCREENSHOT_DIR).expect("Failed to create screenshot directory");
     let secret_key = load_or_create_key();
@@ -121,7 +131,7 @@ fn run_monitor(log_interval: u64, screenshot_interval: u64) {
         if now.duration_since(last_screenshot_time).as_secs() >= screenshot_interval {
             last_screenshot_time = now;
             if !is_inactive {
-                screenshot_filename = capture_screenshots();
+                screenshot_filename = capture_screenshots_optimized();
             }
         }
 
@@ -243,23 +253,36 @@ fn run_verification(file_path: &str) {
     }
 }
 
-// --- Helpers ---
-
-fn capture_screenshots() -> String {
-    // UPDATED: Using xcap crate
-    // This automatically handles monitors and image buffers correctly
+// --- Optimized Capture Function ---
+fn capture_screenshots_optimized() -> String {
     let monitors = Monitor::all().unwrap_or_else(|_| vec![]);
-
     let timestamp = Local::now().format("%Y%m%d_%H%M%S");
     let mut saved_filename = String::from("None");
 
     if let Some(monitor) = monitors.first() {
         if let Ok(image) = monitor.capture_image() {
-            let filename = format!("{}/screen_{}.png", SCREENSHOT_DIR, timestamp);
             
-            // xcap returns a standard RgbaImage which has a working .save() method
-            // No manual buffer math required
-            if image.save(&filename).is_ok() {
+            // 1. Deduplication: Hash the raw bytes
+            let mut hasher = DefaultHasher::new();
+            hasher.write(image.as_raw()); // Hash pixel data
+            let new_hash = hasher.finish();
+
+            // Check against previous hash
+            let mut last_hash_guard = LAST_HASH.lock().unwrap();
+            if *last_hash_guard == new_hash {
+                return String::from("Duplicate (Skipped)");
+            }
+            *last_hash_guard = new_hash;
+
+            // 2. Resizing: Downscale to 50%
+            let new_width = image.width() / 2;
+            let new_height = image.height() / 2;
+            let resized_image = image::imageops::resize(&image, new_width, new_height, FilterType::Triangle);
+
+            // 3. Compression: Save as JPEG
+            let filename = format!("{}/screen_{}.jpg", SCREENSHOT_DIR, timestamp);
+            
+            if resized_image.save(&filename).is_ok() {
                 saved_filename = filename;
             }
         }
